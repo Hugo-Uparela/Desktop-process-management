@@ -1,0 +1,82 @@
+[
+    {
+        "catalogo": 1,
+        "nombre_catalogo": "Catalogo CPU 1",
+        "pid": 0,
+        "nombre": "System Idle Process",
+        "usuario": "NT AUTHORITY\\SYSTEM",
+        "prioridad": 1
+    },
+    {
+        "catalogo": 2,
+        "nombre_catalogo": "Catalogo CPU 1",
+        "pid": 4,
+        "nombre": "System",
+        "usuario": "NT AUTHORITY\\SYSTEM",
+        "prioridad": 1
+    },
+    {
+        "catalogo": 3,
+        "nombre_catalogo": "Catalogo CPU 1",
+        "pid": 8,
+        "nombre": "svchost.exe",
+        "usuario": "NT AUTHORITY\\SYSTEM",
+        "prioridad": 1
+    },
+    {
+        "catalogo": 4,
+        "nombre_catalogo": "Catalogo CPU 1",
+        "pid": 72,
+        "nombre": "",
+        "usuario": "NT AUTHORITY\\SYSTEM",
+        "prioridad": 1
+    },
+    {
+        "catalogo": 5,
+        "nombre_catalogo": "Catalogo CPU 1",
+        "pid": 124,
+        "nombre": "Registry",
+        "usuario": "NT AUTHORITY\\SYSTEM",
+        "prioridad": 1
+    },
+    {
+        "catalogo": 6,
+        "nombre_catalogo": "Catalogo CPU 1",
+        "pid": 468,
+        "nombre": "smss.exe",
+        "usuario": "NT AUTHORITY\\SYSTEM",
+        "prioridad": 1
+    },
+    {
+        "catalogo": 7,
+        "nombre_catalogo": "Catalogo CPU 1",
+        "pid": 744,
+        "nombre": "csrss.exe",
+        "usuario": "NT AUTHORITY\\SYSTEM",
+        "prioridad": 1
+    },
+    {
+        "catalogo": 8,
+        "nombre_catalogo": "Catalogo CPU 1",
+        "pid": 848,
+        "nombre": "wininit.exe",
+        "usuario": "NT AUTHORITY\\SYSTEM",
+        "prioridad": 1
+    },
+    {
+        "catalogo": 9,
+        "nombre_catalogo": "Catalogo CPU 1",
+        "pid": 856,
+        "nombre": "csrss.exe",
+        "usuario": "NT AUTHORITY\\SYSTEM",
+        "prioridad": 1
+    },
+    {
+        "catalogo": 10,
+        "nombre_catalogo": "Catalogo CPU 1",
+        "pid": 860,
+        "nombre": "Code.exe",
+        "usuario": "HUGO-UPARELA\\H'ugo U'parela",
+        "prioridad": 0
+    }
+]

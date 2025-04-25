@@ -1,14 +1,15 @@
-import psutil
-import tkinter as tk
-from tkinter import messagebox, simpledialog, ttk
-import json
 import os
+import json
+import psutil
+import customtkinter as ctk
+from tkinter import messagebox, simpledialog, ttk
 
-from ver_catalogos.mostrar_catalogos import mostrar_catalogos
+ctk.set_appearance_mode("dark")               
+ctk.set_default_color_theme("green")         
 
 class Proceso:
-    def __init__(self, catalogo, nombre_catalogo, pid, nombre, usuario, prioridad):
-        self.catalogo = catalogo
+    def __init__(self, idx, nombre_catalogo, pid, nombre, usuario, prioridad):
+        self.catalogo = idx
         self.nombre_catalogo = nombre_catalogo
         self.pid = pid
         self.nombre = nombre
@@ -19,170 +20,169 @@ class Proceso:
         return self.__dict__
 
 
-class App:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Gestor de Procesos")
-        self.root.geometry("800x600")
+class App(ctk.CTk):
+    def __init__(self):
+        super().__init__()
+        self.title("🛠️ Gestor de Procesos")
+        self.geometry("900x650")
+        self.minsize(800, 600)
 
-        self.label_num = tk.Label(root, text="Número de procesos a capturar:")
-        self.label_num.pack(pady=5)
-        self.entry_num = tk.Entry(root)
-        self.entry_num.pack(pady=5)
+        # Header
+        header = ctk.CTkFrame(self, fg_color="#1f1f1f", corner_radius=0, height=80)
+        header.pack(fill="x")
+        ctk.CTkLabel(
+            header,
+            text="GESTOR DE PROCESOS",
+            font=ctk.CTkFont(size=24, weight="bold"),
+            text_color="white"
+        ).place(relx=0.02, rely=0.3)
 
-        self.label_info = tk.Label(
-            root, text="Seleccione el criterio de selección de procesos:")
-        self.label_info.pack(pady=5)
+        # Contenedor principal
+        container = ctk.CTkFrame(self, fg_color="#242424", corner_radius=12)
+        container.pack(fill="both", expand=True, padx=20, pady=(10, 20))
 
-        self.criteria_var = tk.StringVar(value="cpu")
-        self.radio_cpu = tk.Radiobutton(
-            root, text="Mayor uso de CPU", variable=self.criteria_var, value="cpu")
-        self.radio_memory = tk.Radiobutton(
-            root, text="Mayor uso de Memoria", variable=self.criteria_var, value="memoria")
-        self.radio_cpu.pack()
-        self.radio_memory.pack()
+        # Inputs: Cantidad + Criterio + Botón
+        row = ctk.CTkFrame(container, fg_color="transparent")
+        row.pack(fill="x", pady=(15, 5), padx=15)
 
-        self.button_start = tk.Button(
-            root, text="Iniciar Captura", command=self.start_capture)
-        self.button_start.pack(pady=10)
+        ctk.CTkLabel(row, text="Cantidad:", width=80).grid(row=0, column=0, sticky="w")
+        self.entry_num = ctk.CTkEntry(row, width=80, placeholder_text="Ej: 5")
+        self.entry_num.grid(row=0, column=1, padx=(5,20))
 
-        self.label_processes = tk.Label(
-            root, text="Procesos capturados aparecerán aquí")
-        self.label_processes.pack(pady=10)
+        self.criteria = ctk.StringVar(value="cpu")
+        cpu_rb = ctk.CTkRadioButton(row, text="CPU", variable=self.criteria, value="cpu")
+        mem_rb = ctk.CTkRadioButton(row, text="Memoria", variable=self.criteria, value="memoria")
+        cpu_rb.grid(row=0, column=2, padx=5)
+        mem_rb.grid(row=0, column=3, padx=5)
 
-        self.tree = ttk.Treeview(root, columns=(
-            "PID", "Nombre", "Usuario", "Prioridad"), show="headings")
-        self.tree.heading("PID", text="PID")
-        self.tree.heading("Nombre", text="Nombre")
-        self.tree.heading("Usuario", text="Usuario")
-        self.tree.heading("Prioridad", text="Prioridad")
-        self.tree.column("PID", width=100)
-        self.tree.column("Nombre", width=200)
-        self.tree.column("Usuario", width=250)
-        self.tree.column("Prioridad", width=100)
-        self.tree.pack(pady=10, fill=tk.BOTH, expand=True)
+        ctk.CTkButton(
+            row,
+            text="🔍 Capturar",
+            command=self.start_capture,
+            corner_radius=8,
+            width=120
+        ).grid(row=0, column=4, padx=(20,0))
 
-        self.button_save = tk.Button(
-            root, text="Guardar Procesos", command=self.save_processes)
-        self.button_save.pack(pady=10)
+        # Treeview estilizado
+        tree_frame = ctk.CTkFrame(container, fg_color="transparent")
+        tree_frame.pack(fill="both", expand=True, padx=15, pady=10)
 
-        self.button_show_catalogs = tk.Button(
-            root, text="Mostrar Catálogos Guardados", command=self.show_saved_catalogs)
-        self.button_show_catalogs.pack(pady=10)
+        style = ttk.Style()
+        style.theme_use("clam")
+        style.configure("Custom.Treeview",
+                        background="#2b2b2b",
+                        foreground="white",
+                        rowheight=30,
+                        fieldbackground="#2b2b2b")
+        style.map("Custom.Treeview",
+                  background=[("selected", "#3b8ed0")])
 
+        cols = ("PID", "Nombre", "Usuario", "Prioridad")
+        self.tree = ttk.Treeview(
+            tree_frame,
+            columns=cols,
+            show="headings",
+            style="Custom.Treeview"
+        )
+        for c, w in zip(cols, (80, 250, 250, 100)):
+            self.tree.heading(c, text=c)
+            self.tree.column(c, width=w, anchor="center")
+
+        vsb = ctk.CTkScrollbar(tree_frame, orientation="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=vsb.set)
+        vsb.pack(side="right", fill="y", pady=(0,5))
+        self.tree.pack(fill="both", expand=True)
+
+        # Botones de acción
+        btns = ctk.CTkFrame(container, fg_color="transparent")
+        btns.pack(fill="x", pady=(5,15), padx=15)
+        ctk.CTkButton(btns, text="💾 Guardar", command=self.save_processes, width=100).pack(side="left", padx=10)
+        ctk.CTkButton(btns, text="📚 Catálogos", command=self.show_saved_catalogs, width=120).pack(side="left")
+
+        # Status Bar
+        self.status = ctk.CTkLabel(self, text="🔋 Listo", height=30, fg_color="#1f1f1f")
+        self.status.pack(fill="x", side="bottom")
+
+        # Lógica inicial
         self.procesos = []
-        self.catalog_counter = {"cpu": 1, "memoria": 1}
-        self.inicializar_contadores()
-
+        self.catalog_counter = {"cpu":1, "memoria":1}
         self.current_catalog_name = ""
-
+        self.inicializar_contadores()
         os.makedirs("catalogos/cpu", exist_ok=True)
         os.makedirs("catalogos/memoria", exist_ok=True)
 
     def inicializar_contadores(self):
-        for criterio in ["cpu", "memoria"]:
-            path = os.path.join("catalogos", criterio)
-            max_num = 0
+        for criterio in ["cpu","memoria"]:
+            path = os.path.join("catalogos",criterio)
+            maxn = 0
             if os.path.exists(path):
-                for archivo in os.listdir(path):
-                    if archivo.endswith(".json"):
-                        partes = archivo.replace(".json", "").split("-", 2)
-                        if len(partes) >= 2 and partes[1].isdigit():
-                            num = int(partes[1])
-                            if num > max_num:
-                                max_num = num
-            self.catalog_counter[criterio] = max_num + 1
+                for f in os.listdir(path):
+                    if f.endswith(".json"):
+                        num = int(f.split("-",2)[1])
+                        maxn = max(maxn, num)
+            self.catalog_counter[criterio] = maxn+1
 
     def generar_catalogo_id(self, criterio):
-        contador = self.catalog_counter[criterio]
-        return f"{criterio}-{'{:02d}'.format(contador)}"
+        n = self.catalog_counter[criterio]
+        return f"{criterio}-{n:02d}"
 
     def start_capture(self):
         try:
-            self.num_procesos = int(self.entry_num.get())
-        except ValueError:
-            messagebox.showerror(
-                "Error", "Ingrese un número válido de procesos.")
+            n = int(self.entry_num.get())
+        except:
+            messagebox.showerror("Error","Ingresa un número válido")
             return
 
-        criterio = self.criteria_var.get()
+        procs = []
+        for p in psutil.process_iter(['pid','name','username','memory_info','cpu_percent']):
+            try: procs.append(p.info)
+            except: pass
 
-        all_processes = []
-        for proc in psutil.process_iter(['pid', 'name', 'username', 'memory_info', 'cpu_percent']):
-            try:
-                proc_info = proc.info
-                all_processes.append(proc_info)
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                continue
+        key = 'cpu_percent' if self.criteria.get()=="cpu" else 'memory_info'
+        procs.sort(key=lambda x: x[key] if key=='cpu_percent' else (x['memory_info'].rss if x['memory_info'] else 0),
+                   reverse=True)
+        sel = procs[:n]
 
-        if criterio == "cpu":
-            all_processes.sort(key=lambda p: p['cpu_percent'], reverse=True)
-        else:
-            all_processes.sort(
-                key=lambda p: p['memory_info'].rss if p['memory_info'] else 0, reverse=True)
-
-        selected_processes = all_processes[:self.num_procesos]
-
-        for row in self.tree.get_children():
-            self.tree.delete(row)
-
+        for r in self.tree.get_children(): self.tree.delete(r)
         self.procesos.clear()
 
-        self.label_processes.config(
-            text=f"Mostrando {len(selected_processes)} procesos seleccionados:")
+        crit = self.criteria.get()
+        cat_name = f"Catálogo {crit.upper()} {self.catalog_counter[crit]}"
+        self.current_catalog_name = cat_name
+        for idx,p in enumerate(sel,1):
+            prio = 1 if 'system' in (p.get('username') or '').lower() else 0
+            proc = Proceso(idx, cat_name, p['pid'], p['name'], p.get('username','desconocido'), prio)
+            self.procesos.append(proc)
+            self.tree.insert("", "end", values=(proc.pid, proc.nombre, proc.usuario, proc.prioridad))
 
-        self.current_catalog_name = f"Catalogo {criterio.upper()} {self.catalog_counter[criterio]}"
-
-        for idx, proc in enumerate(selected_processes, start=1):
-            prioridad = 1 if 'system' in (
-                proc.get('username') or '').lower() else 0
-            proceso = Proceso(
-                catalogo=idx,
-                nombre_catalogo=self.current_catalog_name,
-                pid=proc['pid'],
-                nombre=proc['name'],
-                usuario=proc.get('username', 'desconocido'),
-                prioridad=prioridad
-            )
-            self.procesos.append(proceso)
-            self.tree.insert("", tk.END, values=(
-                proceso.pid, proceso.nombre, proceso.usuario, proceso.prioridad))
+        self.status.configure(text=f"🖥️ Capturados: {len(sel)} procesos")
 
     def save_processes(self):
         if not self.procesos:
-            messagebox.showwarning(
-                "Advertencia", "No hay procesos para guardar.")
+            messagebox.showwarning("Atención","No hay procesos para guardar")
             return
-
-        criterio = "cpu" if "CPU" in self.current_catalog_name.upper() else "memoria"
-        catalog_id = self.generar_catalogo_id(criterio)
-
-        nombre_catalogo_usuario = simpledialog.askstring(
+        crit = "cpu" if "CPU" in self.current_catalog_name.upper() else "memoria"
+        cid = self.generar_catalogo_id(crit)
+        
+        # Pregunta con valor por defecto
+        name = simpledialog.askstring(
             "Guardar catálogo",
-            f"ID del Catálogo: {catalog_id}\nIngrese el nombre del catálogo:",
+            f"ID del catálogo: {cid}\nIngrese el nombre del catálogo:",
             initialvalue=self.current_catalog_name
         )
 
-        if not nombre_catalogo_usuario:
-            messagebox.showwarning(
-                "Advertencia", "Debe ingresar un nombre para el catálogo.")
+        if not name:
             return
-
-        nombre_final = f"{catalog_id}-{nombre_catalogo_usuario}"
-        filepath = os.path.join("catalogos", criterio, f"{nombre_final}.json")
-
-        with open(filepath, "w", encoding="utf-8") as f:
+        filename = f"{cid}-{name}.json"
+        with open(os.path.join("catalogos",crit,filename),"w",encoding="utf-8") as f:
             json.dump([p.to_dict() for p in self.procesos], f, indent=4)
-
-        self.catalog_counter[criterio] += 1
-        messagebox.showinfo("Éxito", f"Procesos guardados en {filepath}.")
+        self.catalog_counter[crit] += 1
+        messagebox.showinfo("OK",f"Guardado en catalogos/{crit}/{filename}")
 
     def show_saved_catalogs(self):
-        print("Mostrando catálogos guardados... -> Correcto")
-        mostrar_catalogos()  
-
+        from ver_catalogos.mostrar_catalogos import mostrar_catalogos
+        mostrar_catalogos()
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = App(root)
-    root.mainloop()
+    app = App()
+    app.mainloop()

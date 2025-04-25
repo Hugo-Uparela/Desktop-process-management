@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk
 import json
 import os
-from mostrar_catalogos import mostrar_catalogos
+from ver_catalogos.mostrar_catalogos import mostrar_catalogos
 
 
 class Proceso:
@@ -179,7 +179,8 @@ class App:
         messagebox.showinfo("Éxito", f"Procesos guardados en {filepath}.")
 
     def show_saved_catalogs(self):
-        mostrar_catalogos()  # <-- Llamamos la función externa para mostrar los catálogos
+        print("Mostrando catálogos guardados... -> Correcto")
+        mostrar_catalogos()  
 
 
 if __name__ == "__main__":

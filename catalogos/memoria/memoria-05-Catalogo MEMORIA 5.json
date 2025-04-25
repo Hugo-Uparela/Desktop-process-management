@@ -1,0 +1,82 @@
+[
+    {
+        "catalogo": 1,
+        "nombre_catalogo": "Catalogo MEMORIA 5",
+        "pid": 12580,
+        "nombre": "Code.exe",
+        "usuario": "HUGO-UPARELA\\H'ugo U'parela",
+        "prioridad": 0
+    },
+    {
+        "catalogo": 2,
+        "nombre_catalogo": "Catalogo MEMORIA 5",
+        "pid": 3988,
+        "nombre": "msedge.exe",
+        "usuario": "HUGO-UPARELA\\H'ugo U'parela",
+        "prioridad": 0
+    },
+    {
+        "catalogo": 3,
+        "nombre_catalogo": "Catalogo MEMORIA 5",
+        "pid": 8848,
+        "nombre": "Code.exe",
+        "usuario": "HUGO-UPARELA\\H'ugo U'parela",
+        "prioridad": 0
+    },
+    {
+        "catalogo": 4,
+        "nombre_catalogo": "Catalogo MEMORIA 5",
+        "pid": 17752,
+        "nombre": "Code.exe",
+        "usuario": "HUGO-UPARELA\\H'ugo U'parela",
+        "prioridad": 0
+    },
+    {
+        "catalogo": 5,
+        "nombre_catalogo": "Catalogo MEMORIA 5",
+        "pid": 2816,
+        "nombre": "MemCompression",
+        "usuario": "NT AUTHORITY\\SYSTEM",
+        "prioridad": 1
+    },
+    {
+        "catalogo": 6,
+        "nombre_catalogo": "Catalogo MEMORIA 5",
+        "pid": 12516,
+        "nombre": "msedge.exe",
+        "usuario": "HUGO-UPARELA\\H'ugo U'parela",
+        "prioridad": 0
+    },
+    {
+        "catalogo": 7,
+        "nombre_catalogo": "Catalogo MEMORIA 5",
+        "pid": 6240,
+        "nombre": "msedge.exe",
+        "usuario": "HUGO-UPARELA\\H'ugo U'parela",
+        "prioridad": 0
+    },
+    {
+        "catalogo": 8,
+        "nombre_catalogo": "Catalogo MEMORIA 5",
+        "pid": 9672,
+        "nombre": "Code.exe",
+        "usuario": "HUGO-UPARELA\\H'ugo U'parela",
+        "prioridad": 0
+    },
+    {
+        "catalogo": 9,
+        "nombre_catalogo": "Catalogo MEMORIA 5",
+        "pid": 5572,
+        "nombre": "MsMpEng.exe",
+        "usuario": "NT AUTHORITY\\SYSTEM",
+        "prioridad": 1
+    },
+    {
+        "catalogo": 10,
+        "nombre_catalogo": "Catalogo MEMORIA 5",
+        "pid": 11860,
+        "nombre": "TextInputHost.exe",
+        "usuario": "HUGO-UPARELA\\H'ugo U'parela",
+        "prioridad": 0
+    }
+]

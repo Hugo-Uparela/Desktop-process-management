@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from gestor_procesos import App  
+from UI.app import App  
 
 ctk.set_appearance_mode("dark")       
 ctk.set_default_color_theme("green") 

@@ -1,0 +1,139 @@
+import psutil
+import tkinter as tk
+from tkinter import messagebox, filedialog, simpledialog
+import json
+import os
+
+class Proceso:
+    def __init__(self, catalogo, nombre_catalogo, pid, nombre, usuario, prioridad):
+        self.catalogo = catalogo
+        self.nombre_catalogo = nombre_catalogo
+        self.pid = pid
+        self.nombre = nombre
+        self.usuario = usuario
+        self.prioridad = prioridad
+
+    def to_dict(self):
+        return self.__dict__
+
+class App:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Gestor de Procesos")
+
+        self.label_num = tk.Label(root, text="Número de procesos a capturar:")
+        self.label_num.pack(pady=5)
+        self.entry_num = tk.Entry(root)
+        self.entry_num.pack(pady=5)
+
+        self.label_info = tk.Label(root, text="Seleccione el criterio de selección de procesos:")
+        self.label_info.pack(pady=5)
+
+        self.criteria_var = tk.StringVar(value="cpu")
+        self.radio_cpu = tk.Radiobutton(root, text="Mayor uso de CPU", variable=self.criteria_var, value="cpu")
+        self.radio_memory = tk.Radiobutton(root, text="Mayor uso de Memoria", variable=self.criteria_var, value="memory")
+        self.radio_cpu.pack()
+        self.radio_memory.pack()
+
+        self.button_start = tk.Button(root, text="Iniciar Captura", command=self.start_capture)
+        self.button_start.pack(pady=10)
+
+        self.label_processes = tk.Label(root, text="Procesos capturados aparecerán aquí")
+        self.label_processes.pack(pady=10)
+
+        self.process_listbox = tk.Listbox(root, width=100)
+        self.process_listbox.pack(pady=10)
+
+        self.button_save = tk.Button(root, text="Guardar Procesos", command=self.save_processes)
+        self.button_save.pack(pady=10)
+
+        self.button_show_catalogs = tk.Button(root, text="Mostrar Catálogos Guardados", command=self.show_saved_catalogs)
+        self.button_show_catalogs.pack(pady=10)
+
+        self.procesos = []
+        self.catalog_counter = {"cpu": 1, "memory": 1}
+        self.current_catalog_name = ""
+
+        os.makedirs("catalogos/cpu", exist_ok=True)
+        os.makedirs("catalogos/memoria", exist_ok=True)
+
+    def start_capture(self):
+        try:
+            self.num_procesos = int(self.entry_num.get())
+        except ValueError:
+            messagebox.showerror("Error", "Ingrese un número válido de procesos.")
+            return
+
+        criterio = self.criteria_var.get()
+
+        all_processes = []
+        for proc in psutil.process_iter(['pid', 'name', 'username', 'memory_info', 'cpu_percent']):
+            try:
+                proc_info = proc.info
+                all_processes.append(proc_info)
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
+
+        if criterio == "cpu":
+            all_processes.sort(key=lambda p: p['cpu_percent'], reverse=True)
+        else:
+            all_processes.sort(key=lambda p: p['memory_info'].rss if p['memory_info'] else 0, reverse=True)
+
+        selected_processes = all_processes[:self.num_procesos]
+
+        self.process_listbox.delete(0, tk.END)
+        self.procesos.clear()
+
+        self.label_processes.config(text=f"Mostrando {len(selected_processes)} procesos seleccionados:")
+
+        self.current_catalog_name = f"Catalogo {criterio.upper()} {self.catalog_counter[criterio]}"
+        self.catalog_counter[criterio] += 1
+
+        for idx, proc in enumerate(selected_processes, start=1):
+            prioridad = 1 if 'system' in (proc.get('username') or '').lower() else 0
+            proceso = Proceso(
+                catalogo=idx,
+                nombre_catalogo=self.current_catalog_name,
+                pid=proc['pid'],
+                nombre=proc['name'],
+                usuario=proc.get('username', 'desconocido'),
+                prioridad=prioridad
+            )
+            self.procesos.append(proceso)
+            self.process_listbox.insert(tk.END, f"{proceso.catalogo}: {proceso.nombre} (PID: {proceso.pid})")
+
+    def save_processes(self):
+        if not self.procesos:
+            messagebox.showwarning("Advertencia", "No hay procesos para guardar.")
+            return
+
+        nombre_catalogo = simpledialog.askstring("Guardar catálogo", "Ingrese el nombre del catálogo:", initialvalue=self.current_catalog_name)
+        if not nombre_catalogo:
+            messagebox.showwarning("Advertencia", "Debe ingresar un nombre para el catálogo.")
+            return
+
+        criterio = "cpu" if "CPU" in self.current_catalog_name.upper() else "memoria"
+        filepath = os.path.join("catalogos", criterio, f"{nombre_catalogo}.json")
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump([p.to_dict() for p in self.procesos], f, indent=4)
+
+        messagebox.showinfo("Éxito", f"Procesos guardados en {filepath}.")
+
+    def show_saved_catalogs(self):
+        catalog_dirs = ["catalogos/cpu", "catalogos/memoria"]
+        files = []
+        for directory in catalog_dirs:
+            if os.path.exists(directory):
+                files.extend([os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.json')])
+
+        if not files:
+            messagebox.showinfo("Catálogos", "No hay catálogos guardados.")
+            return
+        catalog_list = "\n".join(files)
+        messagebox.showinfo("Catálogos Guardados", catalog_list)
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = App(root)
+    root.mainloop()

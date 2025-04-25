@@ -66,6 +66,10 @@ class App:
         os.makedirs("catalogos/cpu", exist_ok=True)
         os.makedirs("catalogos/memoria", exist_ok=True)
 
+    def generar_catalogo_id(self, criterio):
+        contador = self.catalog_counter[criterio]
+        return f"{criterio}-{'{:02d}'.format(contador)}"
+
     def start_capture(self):
         try:
             self.num_procesos = int(self.entry_num.get())
@@ -98,7 +102,6 @@ class App:
         self.label_processes.config(text=f"Mostrando {len(selected_processes)} procesos seleccionados:")
 
         self.current_catalog_name = f"Catalogo {criterio.upper()} {self.catalog_counter[criterio]}"
-        self.catalog_counter[criterio] += 1
 
         for idx, proc in enumerate(selected_processes, start=1):
             prioridad = 1 if 'system' in (proc.get('username') or '').lower() else 0
@@ -118,17 +121,26 @@ class App:
             messagebox.showwarning("Advertencia", "No hay procesos para guardar.")
             return
 
-        nombre_catalogo = simpledialog.askstring("Guardar catálogo", "Ingrese el nombre del catálogo:", initialvalue=self.current_catalog_name)
-        if not nombre_catalogo:
+        criterio = "cpu" if "CPU" in self.current_catalog_name.upper() else "memoria"
+        catalog_id = self.generar_catalogo_id(criterio)
+
+        nombre_catalogo_usuario = simpledialog.askstring(
+            "Guardar catálogo",
+            f"ID del Catálogo: {catalog_id}\nIngrese el nombre del catálogo:",
+            initialvalue=self.current_catalog_name
+        )
+
+        if not nombre_catalogo_usuario:
             messagebox.showwarning("Advertencia", "Debe ingresar un nombre para el catálogo.")
             return
 
-        criterio = "cpu" if "CPU" in self.current_catalog_name.upper() else "memoria"
-        filepath = os.path.join("catalogos", criterio, f"{nombre_catalogo}.json")
+        nombre_final = f"{catalog_id}-{nombre_catalogo_usuario}"
+        filepath = os.path.join("catalogos", criterio, f"{nombre_final}.json")
 
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump([p.to_dict() for p in self.procesos], f, indent=4)
 
+        self.catalog_counter[criterio] += 1
         messagebox.showinfo("Éxito", f"Procesos guardados en {filepath}.")
 
     def show_saved_catalogs(self):
@@ -141,6 +153,7 @@ class App:
         if not files:
             messagebox.showinfo("Catálogos", "No hay catálogos guardados.")
             return
+
         catalog_list = "\n".join(files)
         messagebox.showinfo("Catálogos Guardados", catalog_list)
 

@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from tkinter import messagebox, ttk
+from tkinter import messagebox, simpledialog, ttk
 from procesos.manager import ProcessManager
 from ver_catalogos.mostrar_catalogos import mostrar_catalogos
 
@@ -33,7 +33,7 @@ class App(ctk.CTk):
 
         ctk.CTkLabel(row, text="Cantidad:", width=80).grid(row=0, column=0, sticky="w")
         self.entry_num = ctk.CTkEntry(row, width=80, placeholder_text="Ej: 5")
-        self.entry_num.grid(row=0, column=1, padx=(5, 20))
+        self.entry_num.grid(row=0, column=1, padx=(5,20))
 
         self.criteria = ctk.StringVar(value="cpu")
         cpu_rb = ctk.CTkRadioButton(row, text="CPU", variable=self.criteria, value="cpu")
@@ -47,7 +47,7 @@ class App(ctk.CTk):
             command=self.on_capture,
             corner_radius=8,
             width=120
-        ).grid(row=0, column=4, padx=(20, 0))
+        ).grid(row=0, column=4, padx=(20,0))
 
         # Treeview estilizado
         tree_frame = ctk.CTkFrame(container, fg_color="transparent")
@@ -77,12 +77,12 @@ class App(ctk.CTk):
 
         vsb = ctk.CTkScrollbar(tree_frame, orientation="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=vsb.set)
-        vsb.pack(side="right", fill="y", pady=(0, 5))
+        vsb.pack(side="right", fill="y", pady=(0,5))
         self.tree.pack(fill="both", expand=True)
 
         # Botones de acción
         btns = ctk.CTkFrame(container, fg_color="transparent")
-        btns.pack(fill="x", pady=(5, 15), padx=15)
+        btns.pack(fill="x", pady=(5,15), padx=15)
         ctk.CTkButton(btns, text="💾 Guardar", command=self.on_save, width=100).pack(side="left", padx=10)
         ctk.CTkButton(btns, text="📚 Catálogos", command=self.show_saved_catalogs, width=120).pack(side="left")
 
@@ -99,15 +99,15 @@ class App(ctk.CTk):
         try:
             n = int(self.entry_num.get())
         except ValueError:
-            messagebox.showerror("Error", "Ingresa un número válido")
-            return
+            return messagebox.showerror("Error", "Ingresa un número válido")
 
         crit = self.criteria.get()
         self.procesos = self.manager.capture(n, crit)
         if self.procesos:
+            # Guardamos el nombre por defecto para el diálogo
             self.current_catalog_name = self.procesos[0].nombre_catalogo
 
-        # Limpia y carga el treeview
+        # Limpia y rellena el Treeview
         for item in self.tree.get_children():
             self.tree.delete(item)
         for proc in self.procesos:
@@ -116,15 +116,25 @@ class App(ctk.CTk):
                 "end",
                 values=(proc.pid, proc.nombre, proc.usuario, proc.prioridad)
             )
-
         self.status.configure(text=f"🖥️ Capturados: {len(self.procesos)} procesos")
 
     def on_save(self):
         if not self.procesos:
-            messagebox.showwarning("Atención", "No hay procesos para guardar")
-            return
+            return messagebox.showwarning("Atención", "No hay procesos para guardar")
 
-        crit, filename = self.manager.save(self.procesos, self.current_catalog_name)
+        criterio = self.criteria.get()
+        preview_id = self.manager.generate_catalog_id(criterio)
+        prompt = f"ID del catálogo: {preview_id}\nIngrese el nombre del catálogo:"
+        # Valor por defecto en el diálogo
+        nombre = simpledialog.askstring(
+            "Guardar catálogo",
+            prompt,
+            initialvalue=self.current_catalog_name
+        )
+        if not nombre:
+            return  # Usuario canceló o no ingresó
+
+        crit, filename = self.manager.save(self.procesos, criterio, nombre)
         messagebox.showinfo("OK", f"Guardado en catalogos/{crit}/{filename}")
 
     def show_saved_catalogs(self):

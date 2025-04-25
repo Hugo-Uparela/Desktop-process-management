@@ -1,6 +1,6 @@
 import psutil
 import tkinter as tk
-from tkinter import messagebox, filedialog, simpledialog, ttk
+from tkinter import messagebox, simpledialog, ttk
 import json
 import os
 from mostrar_catalogos import mostrar_catalogos
@@ -71,13 +71,27 @@ class App:
         self.button_show_catalogs.pack(pady=10)
 
         self.procesos = []
-        # self.catalog_counter = {"cpu": 1, "memory": 1}
         self.catalog_counter = {"cpu": 1, "memoria": 1}
+        self.inicializar_contadores()
 
         self.current_catalog_name = ""
 
         os.makedirs("catalogos/cpu", exist_ok=True)
         os.makedirs("catalogos/memoria", exist_ok=True)
+
+    def inicializar_contadores(self):
+        for criterio in ["cpu", "memoria"]:
+            path = os.path.join("catalogos", criterio)
+            max_num = 0
+            if os.path.exists(path):
+                for archivo in os.listdir(path):
+                    if archivo.endswith(".json"):
+                        partes = archivo.replace(".json", "").split("-", 2)
+                        if len(partes) >= 2 and partes[1].isdigit():
+                            num = int(partes[1])
+                            if num > max_num:
+                                max_num = num
+            self.catalog_counter[criterio] = max_num + 1
 
     def generar_catalogo_id(self, criterio):
         contador = self.catalog_counter[criterio]

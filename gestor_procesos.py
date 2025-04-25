@@ -1,6 +1,6 @@
 import psutil
 import tkinter as tk
-from tkinter import messagebox, filedialog, simpledialog
+from tkinter import messagebox, filedialog, simpledialog, ttk
 import json
 import os
 
@@ -20,6 +20,7 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("Gestor de Procesos")
+        self.root.geometry("800x600")
 
         self.label_num = tk.Label(root, text="Número de procesos a capturar:")
         self.label_num.pack(pady=5)
@@ -41,8 +42,16 @@ class App:
         self.label_processes = tk.Label(root, text="Procesos capturados aparecerán aquí")
         self.label_processes.pack(pady=10)
 
-        self.process_listbox = tk.Listbox(root, width=100)
-        self.process_listbox.pack(pady=10)
+        self.tree = ttk.Treeview(root, columns=("PID", "Nombre", "Usuario", "Prioridad"), show="headings")
+        self.tree.heading("PID", text="PID")
+        self.tree.heading("Nombre", text="Nombre")
+        self.tree.heading("Usuario", text="Usuario")
+        self.tree.heading("Prioridad", text="Prioridad")
+        self.tree.column("PID", width=100)
+        self.tree.column("Nombre", width=200)
+        self.tree.column("Usuario", width=250)
+        self.tree.column("Prioridad", width=100)
+        self.tree.pack(pady=10, fill=tk.BOTH, expand=True)
 
         self.button_save = tk.Button(root, text="Guardar Procesos", command=self.save_processes)
         self.button_save.pack(pady=10)
@@ -81,7 +90,9 @@ class App:
 
         selected_processes = all_processes[:self.num_procesos]
 
-        self.process_listbox.delete(0, tk.END)
+        for row in self.tree.get_children():
+            self.tree.delete(row)
+
         self.procesos.clear()
 
         self.label_processes.config(text=f"Mostrando {len(selected_processes)} procesos seleccionados:")
@@ -100,7 +111,7 @@ class App:
                 prioridad=prioridad
             )
             self.procesos.append(proceso)
-            self.process_listbox.insert(tk.END, f"{proceso.catalogo}: {proceso.nombre} (PID: {proceso.pid})")
+            self.tree.insert("", tk.END, values=(proceso.pid, proceso.nombre, proceso.usuario, proceso.prioridad))
 
     def save_processes(self):
         if not self.procesos:

@@ -3,8 +3,8 @@ import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk
 import json
 import os
-from ver_catalogos.mostrar_catalogos import mostrar_catalogos
 
+from ver_catalogos.mostrar_catalogos import mostrar_catalogos
 
 class Proceso:
     def __init__(self, catalogo, nombre_catalogo, pid, nombre, usuario, prioridad):
@@ -154,7 +154,6 @@ class App:
                 "Advertencia", "No hay procesos para guardar.")
             return
 
-        # criterio = "cpu" if "CPU" in self.current_catalog_name.upper() else "memory"
         criterio = "cpu" if "CPU" in self.current_catalog_name.upper() else "memoria"
         catalog_id = self.generar_catalogo_id(criterio)
 

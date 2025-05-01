@@ -1,76 +1,76 @@
-# Laboratorio de Gestión de Procesos – Parte 1  
+# Laboratorio de Gestión de Procesos – Parte 1
 **Generador de Catálogos de Procesos**
 
 ---
-
-## 📋 Objetivo  
-Crear una aplicación de escritorio que capture procesos activos del sistema, los catalogue por uso de CPU o memoria y permita guardarlos con nombre por defecto o personalizado.
+## 📋 Objetivo de la Primera Aplicación
+Desarrollar una aplicación de escritorio en Python que:
+1. Capture un número de procesos activos definido por el usuario.  
+2. Permita seleccionar los procesos por mayor uso de **CPU** o **Memoria**.  
+3. Genere un **ID de Catálogo** automático (p.ej. `cpu-01`, `memoria-02`) y asigne un **Nombre de Catálogo** (descriptivo) ingresado por el usuario.  
+4. Registre para cada proceso: `PID`, `Nombre`, `Usuario` y `Prioridad` (0=Expulsivo, 1=No expulsivo).  
+5. Almacene toda la información (en nuestro caso una base de datos SQLite (`procesos.db`) con dos tablas: `cpu` y `memoria`).
 
 ---
 
-## 🔧 Tecnologías  
+## 🔧 Tecnologías y Librerías
 - **Python 3.8+**  
-- **CustomTkinter**  
-- **psutil** 
-- **Tkinter** 
+- **CustomTkinter** (interfaz moderna)  
+- **Tkinter** (widgets básicos)  
+- **psutil** (lectura de procesos)  
+- **SQLite** (persistencia local de catálogos)
 
 ---
 
 ## 🚀 Instalación y Ejecución
-
-1. **Clonar repositorio**  
+1. Clonar el repositorio:
    ```bash
    git clone https://github.com/Hugo-Uparela/Desktop-process-management.git
    cd Desktop-process-management
+   ```
 
-2. **Instalar dependencias**
-```bash
-pip install -r requirements.txt
-```
+2. Ejecutar la aplicación:
+   ```bash
+   python init.py
+   ```
 
-3. **Ejecutar**
-```
-python init.py
-```
+La primera vez se creará automáticamente `procesos.db` en la raíz.
 
+---
 
 ## 📂 Estructura de Carpetas
 ```
 Desktop-process-management
 ├─ assets
-│   ├─ icono.ico        ← Icono para el .exe
-├─ catalogos
-│   ├─ cpu
-│   │   ├─ cpu-01-<nombre>.json
-│   │   └─ …
-│   └─ memoria
-│       ├─ memoria-01-<nombre>.json
-│       └─ …
-├─ procesos
-│   ├─ __init__.py
-│   ├─ proceso.py       ← Clase Proceso
-│   └─ manager.py       ← Lógica de captura y guardado
+│   └─ icono.ico            ← Ícono para el ejecutable
+├─ procesos                
+│   ├─ proceso.py           ← Clase Proceso (modelo de datos)
+│   └─ manager.py           ← Lógica de captura y persistencia en SQLite
 ├─ UI
-│   ├─ __init__.py
-│   ├─ app.py           ← Clase App (interfaz principal)
-│   └─ splash.py        ← Splash screen y utilidades de centrado
+│   ├─ app.py               ← Interfaz principal y captura de procesos
+│   └─ splash.py            ← Pantalla de carga y centrado de ventana
 ├─ ver_catalogos
-│   ├─ __init__.py
-│   ├─ utilidades.py    ← Funciones de carga y listado
-│   ├─ interfaz.py      ← Construcción de la ventana de catálogos
-│   └─ mostrar_catalogos.py ← Orquestador para mostrar catálogos
-├─ init.py              ← Launcher con splash + App().mainloop()
-├─ requirements.txt
-└─ Readme.md
+│   ├─ utilidades.py        ← Acceso a la base de datos y consultas
+│   └─ mostrar_catalogos.py ← Ventana para visualizar catálogos guardados
+├─ init.py                 ← Launcher (splash + App().mainloop())
+├─ requisitos.txt          ← Listado de librerías necesarias
+└─ procesos.db             ← Base de datos (se crea dinámicamente)
 ```
+
+---
 
 ## 🛠 Empaquetado
-Para generar un .exe standalone con ícono y todas las dependencias:
-
+Para generar un ejecutable standalone.
+```bash
+pyinstaller --name gestor_procesos --onefile --windowed --icon "assets/icono.ico" init.py
 ```
-pyinstaller --name gestor_procesos 
---onefile 
---windowed 
---icon "assets/icono.ico" 
---add-data "catalogos;catalogos" 
---add-data "ver_catalogos;ver_catalogos" init.py
+
+---
+
+## 📖 Descripción del Taller completo
+En la siguiente fase (Parte 2), se implementará un simulador de planificación ROUND ROBIN que:
+- Lea los catálogos generados en esta aplicación.  
+- Modele estados de proceso (Listo, Ejecución, Terminado).  
+- Genere archivos de descripción por proceso y mantenga contadores de ráfaga.  
+- Permita reiniciar o interrumpir la simulación.  
+
+

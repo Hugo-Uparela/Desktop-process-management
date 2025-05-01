@@ -1,32 +1,47 @@
-import os
-import json
+import sqlite3
 
-def cargar_procesos_desde_archivo(ruta):
-    """
-    Carga y retorna la lista de procesos desde un archivo JSON dado su ruta.
-    Si no existe el archivo o hay error de lectura, retorna una lista vacía.
-    """
-    try:
-        with open(ruta, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return []
+class CatalogosDB:
+    def __init__(self, db_path="procesos.db"):
+        # Conecta a la base de datos SQLite
+        self.conn = sqlite3.connect(db_path)
 
-def listar_catalogos_por_categoria():
-    """
-    Recorre las carpetas 'catalogos/cpu' y 'catalogos/memoria',
-    y devuelve un dict con la estructura:
-    {
-        "cpu": ("catalogos/cpu", [lista de archivos .json]),
-        "memoria": ("catalogos/memoria", [lista de archivos .json])
-    }
-    """
-    base = "catalogos"
-    categorias = {}
-    for crit in ("cpu", "memoria"):
-        path = os.path.join(base, crit)
-        archivos = []
-        if os.path.isdir(path):
-            archivos = [f for f in os.listdir(path) if f.endswith(".json")]
-        categorias[crit] = (path, sorted(archivos))
-    return categorias
+    def listar_catalogos(self, criterio):
+        """
+        Devuelve una lista de nombres de catálogo (catalog_id) distintos para el criterio dado.
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT DISTINCT catalog_id FROM {criterio} ORDER BY catalog_id")
+        return [row[0] for row in cursor.fetchall()]
+
+    def listar_catalogos_con_id(self, criterio):
+        """
+        Devuelve una lista de tuplas (catalog_id, nombre_catalogo) distintos para el criterio dado.
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            f"SELECT DISTINCT catalog_id, nombre_catalogo FROM {criterio} ORDER BY catalog_id"
+        )
+        return cursor.fetchall()
+
+    def obtener_procesos(self, criterio, catalog_id):
+        """
+        Devuelve los procesos de un catálogo específico: [(pid, nombre, usuario, prioridad), ...]
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            f"SELECT pid, nombre, usuario, prioridad FROM {criterio} WHERE catalog_id = ?",
+            (catalog_id,)
+        )
+        return cursor.fetchall()
+
+    def obtener_procesos_completos(self, criterio, catalog_id):
+        """
+        Devuelve procesos incluyendo ID y nombre de catálogo:
+        [(catalog_id, nombre_catalogo, pid, nombre, usuario, prioridad), ...]
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            f"SELECT catalog_id, nombre_catalogo, pid, nombre, usuario, prioridad FROM {criterio} WHERE catalog_id = ?",
+            (catalog_id,)
+        )
+        return cursor.fetchall()

@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from tkinter import messagebox, simpledialog, ttk
-from procesos.manager import ProcessManager
+from procesos.manager import DatabaseManager as ProcessManager
 from ver_catalogos.mostrar_catalogos import mostrar_catalogos
 
 ctk.set_appearance_mode("dark")

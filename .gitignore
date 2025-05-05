@@ -3,3 +3,4 @@ dist
 build
 gestor_procesos.spec
 .gitignore
+desktop.ini

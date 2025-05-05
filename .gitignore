@@ -1,4 +1,5 @@
 __pycache__/
 dist
 build
-desktop.ini
+gestor_procesos.spec
+.gitignore

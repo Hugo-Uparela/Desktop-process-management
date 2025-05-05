@@ -1,14 +1,8 @@
-import os
 import customtkinter as ctk
 from tkinter import ttk
-from .utilidades import cargar_procesos_desde_archivo
+from .utilidades import CatalogosDB
 
-
-def crear_ventana_catalogos(categorias_con_archivos, parent=None):
-    """
-    Muestra un Toplevel con los catálogos guardados. No inicia un nuevo mainloop.
-    """
-    # Ventana hija de parent si se proporciona
+def crear_ventana_catalogos(parent=None):
     ventana = ctk.CTkToplevel(parent) if parent else ctk.CTkToplevel()
     ventana.title("📚 Catálogos Guardados")
     ventana.configure(fg_color="#242424", corner_radius=12)
@@ -17,21 +11,17 @@ def crear_ventana_catalogos(categorias_con_archivos, parent=None):
     ventana.geometry(f"{w}x{h}+{(sw-w)//2}+{(sh-h)//2}")
     ventana.grab_set()
 
-    # Marco interior
     cont = ctk.CTkFrame(ventana, fg_color="#1f1f1f", corner_radius=12)
     cont.pack(fill="both", expand=True, padx=20, pady=20)
 
-    # Notebook
     notebook = ttk.Notebook(cont)
     notebook.pack(fill="both", expand=True, padx=10, pady=10)
 
-    # Estilo para Treeview
     style = ttk.Style()
     style.theme_use("clam")
-    # Fuente más grande y filas más altas
     style.configure("Cat.Treeview",
                     background="#2b2b2b",
-                    foreground="black",
+                    foreground="white",
                     rowheight=32,
                     fieldbackground="#2b2b2b",
                     font=("Segoe UI", 13))
@@ -40,29 +30,27 @@ def crear_ventana_catalogos(categorias_con_archivos, parent=None):
     style.map("Cat.Treeview",
               background=[("selected", "#3b8ed0")])
 
-    colores = [
-        "#B0C4DE",  # LightSteelBlue
-        "#C0C0C0",  # Silver
-        "#D3D3D3",  # LightGray
-        "#D8BFD8",  # Thistle
-        "#BC8F8F"   # RosyBrown
-    ]
-
-    for idx_cat, (categoria, (ruta_cat, archivos)) in enumerate(categorias_con_archivos.items()):
+    db = CatalogosDB()
+    for criterio in ("cpu", "memoria"):
         frame = ctk.CTkFrame(notebook, fg_color="#242424", corner_radius=8)
-        notebook.add(frame, text=categoria.upper())
+        notebook.add(frame, text=criterio.upper())
 
         tree = ttk.Treeview(
             frame,
-            columns=("ID", "Nombre", "PID", "Proceso", "Usuario", "Prioridad"),
+            columns=("ID_Cat", "Nombre_Cat", "PID", "Proceso", "Usuario", "Prioridad"),
             show="headings",
             style="Cat.Treeview"
         )
-        for col, txt in [("ID", "ID Catálogo"), ("Nombre", "Nombre Catálogo"),
-                         ("PID", "PID"), ("Proceso", "Proceso"),
-                         ("Usuario", "Usuario"), ("Prioridad", "Prioridad")]:
+        headings = [
+            ("ID_Cat", "ID Catálogo", 120),
+            ("Nombre_Cat", "Nombre Catálogo", 200),
+            ("PID", "PID", 80),
+            ("Proceso", "Proceso", 200),
+            ("Usuario", "Usuario", 200),
+            ("Prioridad", "Prioridad", 100),
+        ]
+        for col, txt, width in headings:
             tree.heading(col, text=txt)
-            width = 250 if col in ("Nombre", "Proceso") else 100
             tree.column(col, width=width, anchor="center")
 
         vsb = ctk.CTkScrollbar(frame, orientation="vertical",
@@ -71,26 +59,18 @@ def crear_ventana_catalogos(categorias_con_archivos, parent=None):
         vsb.pack(side="right", fill="y", pady=10)
         tree.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # Insertar filas
-        for i, archivo in enumerate(archivos):
-            procesos = cargar_procesos_desde_archivo(
-                os.path.join(ruta_cat, archivo))
-            sin_ext = archivo[:-5]
-            partes = sin_ext.split("-", 2)
-            cat_id = f"{partes[0]}-{partes[1]}" if len(
-                partes) >= 3 else sin_ext
-            nombre_cat = partes[2] if len(partes) >= 3 else "(Desconocido)"
+        # Para cada catálogo (catalog_id, nombre_catalogo) cargamos los procesos
+        for catalog_id, nombre_cat in db.listar_catalogos_con_id(criterio):
+            procesos = db.obtener_procesos_completos(criterio, catalog_id)
+            tag = f"cat_{catalog_id}"
+            for pid, proc_name, usuario, prioridad in procesos:
+                tree.insert(
+                    "",
+                    "end",
+                    values=(catalog_id, nombre_cat, pid, proc_name, usuario, prioridad),
+                    tags=(tag,)
+                )
+            # Opcional: fondo distinto por catálogo
+            tree.tag_configure(tag, background="#2b2b2b" if criterio=="cpu" else "#313131")
 
-            tag = f"row_{i}"
-            bg = colores[i % len(colores)]
-            tree.tag_configure(tag, background=bg)
-
-            for p in procesos:
-                tree.insert("", "end",
-                            values=(cat_id, nombre_cat,
-                                    p["pid"], p["nombre"],
-                                    p["usuario"], p["prioridad"]),
-                            tags=(tag,))
-
-    # No iniciar mainloop; es parte de la app principal
     return ventana
